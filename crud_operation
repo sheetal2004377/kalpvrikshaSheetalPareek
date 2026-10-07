@@ -1,13 +1,73 @@
-#include<stdio.h>
+#include <stdio.h>
+#include <ctype.h>
+
 struct details{
     int student_id;
     char student_name[50];
     int student_age;
 };
-void create(){
+
+void clear_input(){
+    int ch;
+
+    while((ch = getchar()) != '\n' && ch != EOF){
+    }
+}
+
+int id_exists(int id){
     FILE *fp;
     struct details stu;
-    fp=fopen("student.txt","a");
+    fp=fopen("users.txt","r");
+    if(fp==NULL){
+        return 0;
+    }
+     while(fscanf(fp, "%d %s %d",
+                 &stu.student_id,
+                 stu.student_name,
+                 &stu.student_age) == 3){
+
+        if(stu.student_id == id){
+            fclose(fp);
+            return 1;
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+int valid_id(int id){
+    if(id > 0){
+        return 1;
+    }
+
+    return 0;
+}
+int valid_name(char name[]){
+    int i=0;
+    if(name[0]=='\0'){
+        return 0;
+    }
+    while(name[i]!='\0'){
+        if(!isalpha(name[i])){
+            return 0;
+        }
+        i++;
+    }
+    return 1;
+}
+int valid_age(int age){
+    if(age > 0 && age <= 120){
+        return 1;
+    }
+
+    return 0;
+}
+void create(){
+    
+    FILE *fp;
+    struct details stu;
+
+    fp=fopen("users.txt","a");
 
     if(fp==NULL){
         printf("File cannot be opened.\n");
@@ -15,13 +75,51 @@ void create(){
     }
 
     printf("Enter student id: ");
-    scanf("%d",&stu.student_id);
+
+    if(scanf("%d",&stu.student_id) != 1){
+        printf("Invalid student ID.\n");
+        clear_input();
+        fclose(fp);
+        return;
+    }
+
+    if(!valid_id(stu.student_id)){
+        printf("Invalid student ID.\n");
+        fclose(fp);
+        return;
+    }
+
+    if(id_exists(stu.student_id)){
+        printf("Student ID already exists.\n");
+        fclose(fp);
+        return;
+    }
 
     printf("Enter student name: ");
-    scanf("%s",stu.student_name);
+    scanf("%49s",stu.student_name);
+
+
+    if(!valid_name(stu.student_name)){
+        printf("Invalid student name.\n");
+        fclose(fp);
+        return;
+    }
+
 
     printf("Enter student age: ");
-    scanf("%d",&stu.student_age);
+
+    if(scanf("%d",&stu.student_age) != 1){
+        printf("Invalid student age.\n");
+        clear_input();
+        fclose(fp);
+        return;
+    }
+
+    if(!valid_age(stu.student_age)){
+        printf("Invalid student age.\n");
+        fclose(fp);
+        return;
+    }
 
     fprintf(fp,"%d %s %d\n",stu.student_id,stu.student_name,stu.student_age);
 
@@ -32,116 +130,243 @@ void read(){
     FILE* fp;
     struct details stu;
 
-    fp=fopen("student.txt","r");
+    fp=fopen("users.txt","r");
+
     if(fp==NULL){
         printf("File not found.\n");
         return;
     }
-    while(fscanf(fp,"%d %s %d",&stu.student_id,stu.student_name,&stu.student_age)!=EOF){
-        printf("Student ID: %d\n",stu.student_id);
-        printf("Student Name: %s\n",stu.student_name);
-        printf("Student Age: %d\n",stu.student_age);
+    printf("\n%-10s %-20s %-10s\n", "ID", "Name", "Age");
+    printf("----------------------------------------\n");
+    while(fscanf(fp,"%d %s %d",&stu.student_id,stu.student_name,&stu.student_age)==3){
+      printf("%-10d %-20s %-10d\n",
+               stu.student_id,
+               stu.student_name,
+               stu.student_age);
     }
+    
     fclose(fp);
 }   
 
+
 void update(){
-    FILE *fp,*new;
+    FILE *fp, *new;
     struct details stu;
     int target_id;
-    
-    fp=fopen("student.txt","r");
-    new=fopen("temp.txt","w");
+    int found = 0;
 
-    if(fp==NULL||new==NULL){
-        printf("file cannot be opened.\n");
-        return ;
+    fp = fopen("users.txt", "r");
+    new = fopen("temp.txt", "w");
+
+    if(fp == NULL || new == NULL){
+        printf("File cannot be opened.\n");
+
+        if(fp != NULL){
+            fclose(fp);
+        }
+
+        if(new != NULL){
+            fclose(new);
+        }
+
+        return;
     }
 
     printf("Enter student id to update: ");
-    scanf("%d",&target_id);
+    if(scanf("%d",&target_id) != 1){
+        printf("Invalid student ID.\n");
+        clear_input();
+        fclose(fp);
+        fclose(new);
+        remove("temp.txt");
+        return;
+    }
+    if(!valid_id(target_id)){
+        printf("Invalid student ID.\n");
+        fclose(fp);
+        fclose(new);
+        remove("temp.txt");
+        return;
+    }
+    while(fscanf(fp, "%d %s %d",
+                 &stu.student_id,
+                 stu.student_name,
+                 &stu.student_age) ==3){
 
-    while(fscanf(fp,"%d %s %d",&stu.student_id,stu.student_name,&stu.student_age)!=EOF){
-            if(stu.student_id==target_id){
-                printf("Enter new student name: ");
-                scanf("%s",stu.student_name);
-                printf("Enter new student age: ");
-                scanf("%d",&stu.student_age);
+        if(stu.student_id == target_id){
+            found = 1;
+
+            printf("Enter new student name: ");
+            scanf("%49s", stu.student_name);
+
+            if(!valid_name(stu.student_name)){
+                printf("Invalid student name.\n");
+                fclose(fp);
+                fclose(new);
+                remove("temp.txt");
+                return;
             }
-           fprintf(new,"%d %s %d\n",
-            stu.student_id,
-            stu.student_name,
-            stu.student_age);
-        }
-     fclose(fp);
-     fclose(new);
-     remove("student.txt");
-     rename("temp.txt","student.txt");
-     printf("Student record updated successfully.\n");
 
+            printf("Enter new student age: ");
+             if(scanf("%d",&stu.student_age) != 1){
+                printf("Invalid student age.\n");
+                clear_input();
+                fclose(fp);
+                fclose(new);
+                remove("temp.txt");
+                return;
+            }
+
+            if(!valid_age(stu.student_age)){
+                printf("Invalid student age.\n");
+                fclose(fp);
+                fclose(new);
+                remove("temp.txt");
+                return;
+            }
+        }
+
+        fprintf(new, "%d %s %d\n",
+                stu.student_id,
+                stu.student_name,
+                stu.student_age);
+    }
+
+    fclose(fp);
+    fclose(new);
+
+    if(found == 0){
+        remove("temp.txt");
+        printf("Student ID does not exist.\n");
+        return;
+    }
+
+    remove("users.txt");
+    rename("temp.txt", "users.txt");
+
+    printf("Student record updated successfully.\n");
 }
 void delete(){
-    FILE *fp,*new;
+    FILE *fp, *new;
     struct details stu;
     int target_id;
+    int found = 0;
 
-    fp=fopen("student.txt","r");
-    new=fopen("temp.txt","w");
+    fp = fopen("users.txt", "r");
+    new = fopen("temp.txt", "w");
 
-    if(fp==NULL||new==NULL){
-        printf("This file cannot be opened.\n");
+    if(fp == NULL || new == NULL){
+        printf("File cannot be opened.\n");
+
+        if(fp != NULL){
+            fclose(fp);
+        }
+
+        if(new != NULL){
+            fclose(new);
+        }
+
         return;
     }
 
     printf("Enter student id to delete: ");
-    scanf("%d",&target_id);
 
-    while(fscanf(fp,"%d %s %d",&stu.student_id,stu.student_name,&stu.student_age)!=EOF){
-        if(stu.student_id!=target_id){
-            fprintf(new,"%d %s %d\n",
+    if(scanf("%d",&target_id) != 1){
+        printf("Invalid student ID.\n");
+        clear_input();
+        fclose(fp);
+        fclose(new);
+        remove("temp.txt");
+        return;
+    }
+
+    if(!valid_id(target_id)){
+        printf("Invalid student ID.\n");
+        fclose(fp);
+        fclose(new);
+        remove("temp.txt");
+        return;
+    }
+
+    while(fscanf(fp, "%d %s %d",
+                 &stu.student_id,
+                 stu.student_name,
+                 &stu.student_age) == 3){
+
+        if(stu.student_id == target_id){
+            found = 1;
+            continue;
+        }
+
+        fprintf(new, "%d %s %d\n",
                 stu.student_id,
                 stu.student_name,
                 stu.student_age);
-        }
     }
+
     fclose(fp);
     fclose(new);
-    remove("student.txt");
-    rename("temp.txt","student.txt");
+
+    if(found == 0){
+        remove("temp.txt");
+        printf("Student ID does not exist.\n");
+        return;
+    }
+
+    remove("users.txt");
+    rename("temp.txt", "users.txt");
+
     printf("Student record deleted successfully.\n");
 }
-  
+
+void menu(){
+    printf("\n1. Create student records\n");
+    printf("2. Read student records\n");
+    printf("3. Update student records\n");
+    printf("4. Delete student records\n");
+    printf("5. Exit\n");
+}
 
 int main(){
-    int select=0;
+    int select;
+
     while(1){
-        printf("1. Create student records\n");
-        printf("2. Read student records\n");
-        printf("3. Update student records\n");
-        printf("4. Delete student records\n");
-        printf("5. Exit\n");
+
+        menu();
+
         printf("Enter your crud operation: ");
-        scanf("%d",&select);
+
+        if(scanf("%d",&select) != 1){
+            printf("Invalid selection. Please enter a number.\n");
+            clear_input();
+            continue;
+        }
+
+
         switch(select){
+
             case 1:
                 create();
                 break;
-            case 2: 
+
+            case 2:
                 read();
                 break;
+
             case 3:
                 update();
                 break;
+
             case 4:
                 delete();
                 break;
+
             case 5:
                 printf("Program is ended.\n");
                 return 0;
+
             default:
-            printf("Invalid selection .Please try again.\n");
+                printf("Invalid selection. Please try again.\n");
         }
-
-
     }
 }
