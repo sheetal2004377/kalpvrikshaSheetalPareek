@@ -1,0 +1,31 @@
+#include <stdio.h>
+int main() 
+{
+    int n;
+    scanf("%d", &n);
+    
+    int size = 2 * n - 1;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            // Top aur left se distance dekh kar shuru karte hain
+            int top = i;
+            int left = j;
+            int min_val = (top < left) ? top : left;
+            
+            // Ab check karte hain ki kahin bottom ya right toh zyada paas nahi hai
+            int bottom = size - 1 - i;
+            if (bottom < min_val) {
+                min_val = bottom;
+            }
+            
+            int right = size - 1 - j;
+            if (right < min_val) {
+                min_val = right;
+            }
+            
+            printf("%d ", n - min_val);
+        }
+        printf("\n");
+    }
+    return 0;
+}
