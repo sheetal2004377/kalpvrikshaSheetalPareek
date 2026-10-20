@@ -14,8 +14,8 @@
 // Defining enum for ticket categories
 typedef enum {
     STANDARD = 1,
-    PREMIUM,
-    RECLINER
+    PREMIUM =2,
+    RECLINER =3
 } TicketCategory;
 
 // Function declarations
@@ -94,7 +94,6 @@ int takeInputs(char name[], int *tickets, TicketCategory *category)
     int choice;
 
     // Taking customer name
-    printf("Enter customer name: ");
     if (scanf("%49s", name) != 1 || !validateName(name))
     {
         printf("Invalid customer name\n");
@@ -102,7 +101,6 @@ int takeInputs(char name[], int *tickets, TicketCategory *category)
     }
 
     // Taking number of tickets
-    printf("Enter number of tickets: ");
     if (scanf("%d", tickets) != 1)
     {
         printf("Invalid input\n");
@@ -116,7 +114,6 @@ int takeInputs(char name[], int *tickets, TicketCategory *category)
     }
 
     // Taking ticket category
-    printf("Enter ticket category (1-Standard, 2-Premium, 3-Recliner): ");
     if (scanf("%d", &choice) != 1)
     {
         printf("Invalid input\n");
