@@ -17,15 +17,6 @@ typedef enum {
     STATUS_MEMORY_ERROR
 } StatusCode;
 
-// Menu options
-typedef enum {
-    ADD_EMPLOYEE = 1,
-    REMOVE_EMPLOYEE =2 ,
-    DISPLAY_EMPLOYEE_HIERARCHY=3,
-    DISPLAY_COMPLETE_HIERARCHY=4,
-    EXIT_PROGRAM=5
-} MenuOption;
-
 // Structure to store employee details
 typedef struct {
     int id;
@@ -62,24 +53,12 @@ void clearInput(void) {
 
 // Read text with spaces
 int readText(char text[], int size) {
-    int index = 0;
-    int character;
 
-    if (fgets(text, size, stdin) == NULL) {
+    if (scanf("%s", text) != 1) {
+        clearInput();
         return 0;
     }
-
-    while (text[index] != '\0' && text[index] != '\n') {
-        index++;
-    }
-
-    if (text[index] == '\n') {
-        text[index] = '\0';
-    } else {
-        while ((character = getchar()) != '\n' && character != EOF) {
-        }
-    }
-
+    clearInput();
     return text[0] != '\0';
 }
 
