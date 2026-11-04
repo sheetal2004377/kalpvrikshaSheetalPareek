@@ -4,117 +4,136 @@
 #define MIN_SIZE 2
 #define MAX_SIZE 10
 #define MAX_VAL 255
+
 //FUNCTION DECLARATIONS (Prototypes)
-int read_size(void);
-int* allocate_values(int size);
-int** allocate_matrix(int size);
-void link_pointers(int **matrix, int *values, int size);
-void make_matrix(int **matrix, int size);
-void show_matrix(int **matrix, int size);
-void swap_addresses(int **ptr1, int **ptr2);
-void transpose_matrix(int **matrix, int size);
-void reverse_rows(int **matrix, int size);
-void rotate_matrix(int **matrix, int size);
-void copy_row(int *source, int *destination, int size);
-int get_average(int **matrix, int size, int *previous, int *current, int row, int column);
-void smooth_matrix(int **matrix, int size);
-void free_memory(int *values, int **matrix);
+int readSize(void);
+int* allocateValues(int size);
+void makeMatrix(int *matrix, int size);
+void showMatrix(int *matrix, int size);
+void swapValues(int *ptr1, int *ptr2);
+void transposeMatrix(int *matrix, int size);
+void reverseRows(int *matrix, int size);
+void rotateMatrix(int *matrix, int size);
+void copyRow(int *source, int *destination, int size);
+int getAverage(int *matrix, int size, int *previous, int *current, int row, int column);
+void smoothMatrix(int *matrix, int size);
+void freeMemory(int *values);
 
 //FUNCTION DEFINITIONS (Implementations)
 
-int read_size(void) {
-    int size, result, ch;
+int readSize(void) {
+    int size, ch;
 
-    while(1){
+    while(1) {
         printf("Enter matrix size (%d-%d): ", MIN_SIZE, MAX_SIZE);
-        result = scanf("%d", &size);
 
-        if(result == EOF){
-            exit(1);
+        if(scanf("%d", &size) != 1) {
+            printf("Invalid input!\n");
+
+            while((ch = getchar()) != '\n' && ch != EOF);
+
+            if(ch == EOF) {
+                return -1;
+            }
+
+            continue;
         }
 
-        if(result == 1 && size >= MIN_SIZE && size <= MAX_SIZE){
+        ch = getchar();
+
+        while(ch == ' ' || ch == '\t' || ch == '\r') {
+            ch = getchar();
+        }
+
+        if(ch != '\n' && ch != EOF) {
+            printf("Invalid input!\n");
+
+            while(ch != '\n' && ch != EOF) {
+                ch = getchar();
+            }
+
+            if(ch == EOF) {
+                return -1;
+            }
+
+            continue;
+        }
+
+        if(size >= MIN_SIZE && size <= MAX_SIZE) {
             return size;
         }
 
-        printf("Invalid input. Enter a whole number between %d and %d.\n", MIN_SIZE, MAX_SIZE);
+        printf("Invalid size!\n");
 
-        while((ch = getchar()) != '\n' && ch != EOF){
-        }
-
-        if(ch == EOF){
-            exit(1);
+        if(ch == EOF) {
+            return -1;
         }
     }
 }
 
-int* allocate_values(int size) {
-    return (int *)malloc(size * size * sizeof(int));
+//Memory Allocation
+int* allocateValues(int size) {
+    return malloc((size_t)size * size * sizeof(int));
 }
 
-int** allocate_matrix(int size) {
-    return (int **)malloc(size * size * sizeof(int *));
-}
-
-void link_pointers(int **matrix, int *values, int size) {
-    for(int i = 0; i < size * size; i++){
-        *(matrix + i) = values + i;
-    }
-}
-
-void make_matrix(int **matrix, int size) {
-    unsigned long long seed = 12345ULL;
+//create matrix
+void makeMatrix(int *matrix, int size) {
     int *cell;
 
-    for(cell = *matrix; cell < *matrix + size * size; cell++){
-        seed = (seed * 1103515245ULL + 12345ULL);
-        *cell = (int)((seed / 65536ULL) % (MAX_VAL + 1));
+    for(cell = matrix; cell < matrix + size * size; cell++) {
+        *cell = rand() % (MAX_VAL + 1);
     }
 }
 
-void show_matrix(int **matrix, int size) {
+//display matrix
+void showMatrix(int *matrix, int size) {
     int i, j;
 
     for(i = 0; i < size; i++){
         for(j = 0; j < size; j++){
-            printf("%4d", **(matrix + i * size + j));
+            printf("%4d", *(matrix + i * size + j));
         }
         printf("\n");
     }
 }
 
-void swap_addresses(int **ptr1, int **ptr2) {
-    int *temp = *ptr1;
+//Swap Values
+void swapValues(int *ptr1, int *ptr2) {
+    int temp = *ptr1;
     *ptr1 = *ptr2;
     *ptr2 = temp;
 }
 
-void transpose_matrix(int **matrix, int size) {
+//transpose matrix
+void transposeMatrix(int *matrix, int size) {
     int i, j;
 
     for(i = 0; i < size; i++){
         for(j = i + 1; j < size; j++){
-            swap_addresses((matrix + i * size + j), (matrix + j * size + i));
+            swapValues((matrix + i * size + j), (matrix + j * size + i));
         }
     }
 }
 
-void reverse_rows(int **matrix, int size) {
+//reverse rows
+void reverseRows(int *matrix, int size) {
     int i, j;
 
     for(i = 0; i < size; i++){
         for(j = 0; j < size / 2; j++){
-            swap_addresses((matrix + i * size + j), (matrix + i * size + (size - 1 - j)));
+            swapValues((matrix + i * size + j), (matrix + i * size + (size - 1 - j)));
         }
     }
 }
 
-void rotate_matrix(int **matrix, int size) {
-    transpose_matrix(matrix, size);
-    reverse_rows(matrix, size);
+//rotate Matrix
+void rotateMatrix(int *matrix, int size) {
+    transposeMatrix(matrix, size);
+    reverseRows(matrix, size);
 }
 
-void copy_row(int *source, int *destination, int size) {
+//copy rows
+void copyRow(int *source, int *destination, int size) {
     int i;
 
     for(i = 0; i < size; i++){
@@ -122,7 +141,8 @@ void copy_row(int *source, int *destination, int size) {
     }
 }
 
-int get_average(int **matrix, int size, int *previous, int *current, int row, int column) {
+//calculate average
+int getAverage(int *matrix, int size, int *previous, int *current, int row, int column) {
     int sum = 0, count = 0, x, y;
 
     for(x = row - 1; x <= row + 1; x++){
@@ -135,7 +155,7 @@ int get_average(int **matrix, int size, int *previous, int *current, int row, in
                     sum += *(current + y);
                 }
                 else{
-                    sum += **(matrix + x * size + y);
+                    sum += *(matrix + x * size + y);
                 }
 
                 count++;
@@ -146,63 +166,68 @@ int get_average(int **matrix, int size, int *previous, int *current, int row, in
     return sum / count;
 }
 
-void smooth_matrix(int **matrix, int size) {
+void smoothMatrix(int *matrix, int size) {
     int previous[MAX_SIZE] = {0};
     int current[MAX_SIZE] = {0};
-    int temp_row[MAX_SIZE];
-    int row, column;
+    int tempRow[MAX_SIZE];
+    int row, column,j;
 
     for(row = 0; row < size; row++){
-        for(int j = 0; j < size; j++) {
-            *(current + j) = **(matrix + row * size + j);
+        for(j = 0; j < size; j++) {
+            *(current + j) = *(matrix + row * size + j);
         }
 
         for(column = 0; column < size; column++){
-            *(temp_row + column) = get_average(matrix, size, previous, current, row, column);
+            *(tempRow + column) = getAverage(matrix, size, previous, current, row, column);
         }
 
-        for(int j = 0; j < size; j++) {
-            **(matrix + row * size + j) = *(temp_row + j);
+        for(j = 0; j < size; j++) {
+            *(matrix + row * size + j) = *(tempRow + j);
         }
 
-        copy_row(current, previous, size);
+        copyRow(current, previous, size);
     }
 }
 
-void free_memory(int *values, int **matrix) {
-    if (values) free(values);
-    if (matrix) free(matrix);
+void freeMemory(int *values) {
+    free(values);
 }
-
 
   // MAIN FUNCTION 
 
 int main(void) {
-    int size = read_size();
+    int size = readSize();
 
-    int *values = allocate_values(size);
-    int **matrix = allocate_matrix(size);
+    if(size == -1) {
+        return 1;
+    }
 
-    if (!values || !matrix) {
+    int *values = allocateValues(size);
+
+     if(values == NULL) {
         printf("Memory allocation failed!\n");
         return 1;
     }
 
-    link_pointers(matrix, values, size);
+    makeMatrix(values, size);
 
-    make_matrix(matrix, size);
-    printf("\nOriginal :\n");
-    show_matrix(matrix, size);
+   printf("\nOriginal:\n");
+    showMatrix(values, size);
 
-    rotate_matrix(matrix, size);
+    rotateMatrix(values, size);
+
     printf("\nRotated:\n");
-    show_matrix(matrix, size);
+    showMatrix(values, size);
 
-    smooth_matrix(matrix, size);
+    smoothMatrix(values, size);
+
     printf("\nFinal Output:\n");
-    show_matrix(matrix, size);
+    showMatrix(values, size);
 
-    free_memory(values, matrix);
+    // Free allocated memory
+    freeMemory(values);
+    values = NULL;
 
     return 0;
+
 }
