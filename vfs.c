@@ -40,6 +40,10 @@ FileNode *cwd = NULL;
 void initFreeList() {
     for (int i = 0; i < NUM_BLOCKS; i++) {
         FreeBlock *fb = (FreeBlock *)malloc(sizeof(FreeBlock));
+        if (fb == NULL) {
+        printf("Memory allocation failed.\n");
+        return;
+     }
         fb->blockIndex = i;
         fb->next = NULL;
         fb->prev = NULL;
@@ -74,6 +78,11 @@ int allocateBlock() {
 
 void returnBlock(int idx) {
     FreeBlock *fb = (FreeBlock *)malloc(sizeof(FreeBlock));
+    if (fb == NULL) {
+     printf("Memory allocation failed while returning block.\n");
+     return;
+    }
+
     fb->blockIndex = idx;
     fb->next = NULL;
     fb->prev = NULL;
@@ -131,6 +140,10 @@ void cmd_mkdir(const char *name) {
         return;
     }
     FileNode *newNode = (FileNode *)malloc(sizeof(FileNode));
+    if (newNode == NULL) {
+    printf("Memory allocation failed.\n");
+    return;
+     }
     strcpy(newNode->name, name);
     newNode->type = NODE_DIR;
     newNode->parent = cwd;
@@ -148,6 +161,10 @@ void cmd_create(const char *name) {
         return;
     }
     FileNode *newNode = (FileNode *)malloc(sizeof(FileNode));
+    if (newNode == NULL) {
+    printf("Memory allocation failed.\n");
+    return;
+    }
     strcpy(newNode->name, name);
     newNode->type = NODE_FILE;
     newNode->parent = cwd;
@@ -181,8 +198,12 @@ void cmd_write(const char *filename, char *content) {
         return;
     }
 
-    file->contentSize = len;
-    file->numBlocksAllocated = 0;
+   for (int i = 0; i < file->numBlocksAllocated; i++) {
+    returnBlock(file->blockPointers[i]);
+}
+
+file->numBlocksAllocated = 0;
+file->contentSize = len; 
 
     int totalWritten = 0;
     for (int i = 0; i < requiredBlocks; i++) {
@@ -191,7 +212,9 @@ void cmd_write(const char *filename, char *content) {
         file->blockPointers[file->numBlocksAllocated++] = blk;
 
         int chunk = (len - totalWritten > BLOCK_SIZE) ? BLOCK_SIZE : (len - totalWritten);
-        memcpy(virtualDisk[blk], content + totalWritten, chunk);
+        for (int j = 0; j < chunk; j++) {
+           virtualDisk[blk][j] = content[totalWritten + j];
+        }
         totalWritten += chunk;
     }
 
@@ -314,7 +337,11 @@ void cmd_df() {
 }
 
 int main() {
-    memset(virtualDisk, 0, sizeof(virtualDisk));
+  for (int i = 0; i < NUM_BLOCKS; i++) {
+    for (int j = 0; j < BLOCK_SIZE; j++) {
+        virtualDisk[i][j] = 0;
+    }
+}
     initFreeList();
 
     root = (FileNode *)malloc(sizeof(FileNode));
